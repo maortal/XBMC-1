@@ -1,3 +1,6 @@
+3.9.6
+- [fix] Sratim, SubCenter by Rabak
+
 3.9.5
 - [fix] LegendasDivx, LegendasZone, Pipocas and euTorrents, highlandr
 - [fix] LegendasTV: some windows downloads bug fixes, gfjardim

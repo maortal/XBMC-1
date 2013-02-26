@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="script.xbmc.subtitles.hebrew"
        name="XBMC Subtitles Hebrew"
-       version="3.9.5"
+       version="3.9.6"
        provider-name="amet, mr_blobby, rabak, TheWiz">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>
@@ -14,7 +14,7 @@
     <summary lang="en">XBMC Subtitles Hebrew</summary>
     <summary lang="he">XBMC כתוביות בעברית</summary>
     <description lang="en">Search and download subtitles from multipe providers.Subtitle button on OSD needs to be activated.</description>
-    <description lang="he">חפש והורד כתוביות ממספר ספקים. כפתור הכתוביות בתפריט ה-OSD צריך להיות פעיל.</description>
+    <description lang="he">להפעלה כנס ל-הגדרות-> מראה-> מעטפה-> הגדרות-> תוסף</description>
     <platform>all</platform>
   </extension>
 </addon>

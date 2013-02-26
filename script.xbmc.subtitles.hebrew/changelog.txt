@@ -1,3 +1,7 @@
+3.9.7
+- [fix] fixed bug in OpenSubtitles
+- Remove all un-needed sites and langs
+
 3.9.6
 - [fix] Sratim, SubCenter by Rabak
 

@@ -80,7 +80,7 @@ Custom extensions can be added via the settings.
 
 <addon id="script.xbmc.subtitles.hebrew"
        name="XBMC Subtitles Hebrew"
-       version="3.9.6"
+       version="3.9.7"
        provider-name="amet, mr_blobby, rabak, TheWiz">
   <requires>
     <import addon="xbmc.python" version="2.1.0"/>

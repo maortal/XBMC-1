@@ -36,6 +36,7 @@ SSUBTITLE_LIST_PATTERN = "l\.php\?surl=(?P<fid>\d*).*?subt_lang.*?title=\"(?P<la
 TV_SEASON_PATTERN = "seasonlink_(?P<slink>\d+).*?>(?P<snum>\d+)</a>"
 TV_EPISODE_PATTERN = "episodelink_(?P<elink>\d+).*?>(?P<enum>\d+)</a>"
 USER_AGENT = "Mozilla%2F4.0%20(compatible%3B%20MSIE%207.0%3B%20Windows%20NT%206.0)"
+releases_types   = ['web-dl', '480p', '720p', '1080p', 'h264', 'x264', 'xvid', 'aac20', 'hdtv', 'dvdrip', 'ac3', 'bluray', 'dd51', 'divx', 'proper', 'repack', 'pdtv', 'rerip', 'dts']
 
 #===============================================================================
 # Private utility functions
@@ -54,7 +55,28 @@ def sratimToScript(language):
         "ספרדית"    : "Spanish"
     }
     return languages[language]
-
+def getrating(subsfile, videofile):
+    x=0
+    rating = 0
+    log(__name__ ,"testing subname\n %s[subname] \n %s[filename]" % (subsfile,videofile))
+    videofile = "".join(videofile.split('.')[:-1]).lower()
+    subsfile = subsfile.lower().replace('.', '')
+    videofile = videofile.replace('.', '')
+    for release_type in releases_types:
+        if (release_type in videofile):
+            x+=1
+            if (release_type in subsfile): rating += 1
+    log(__name__ ,"   Rating is= %s " % (rating))
+    rating=rating/float(x)
+    log(__name__ ,"   x= %s (r,x) Result is:  %f" % (x,rating))
+    rating*=4
+    log(__name__ ,"   x= %s Result is:  %f" % (x,rating))
+    if videofile.split('-')[-1] == subsfile.split('-')[-1] : rating += 1
+    if rating > 0:
+        rating = rating * 2
+        #log(__name__ ,"    Final is:  %s" % (rating)
+    return round(rating)
+    
 # Returns the content of the given URL. Used for both html and subtitle files.
 # Based on Titlovi's service.py
 def getURL(url):
@@ -102,7 +124,7 @@ def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
                                   '.gif', 'language_name': sratimToScript(language), 'sendspace': True})
 
 # Same as getAllSubtitles() but receives season and episode numbers and find them.
-def getAllTVSubtitles(subtitlePageID,languageList,subtitlesList,season,episode):
+def getAllTVSubtitles(fname,subtitlePageID,languageList,subtitlesList,season,episode):
     # Retrieve the subtitles page (html)
     subtitlePage = getURL(BASE_URL + "viewseries.php?id=" + subtitlePageID + "&m=subtitles#")
     # Retrieve the requested season
@@ -121,7 +143,8 @@ def getAllTVSubtitles(subtitlePageID,languageList,subtitlesList,season,episode):
                         # Check if the subtitles found match one of our languages was selected
                         # by the user
                         if (sratimToScript(language) in languageList):
-                            subtitlesList.append({'rating': '0', 'sync': False,
+                            rating=getrating(title,fname)
+                            subtitlesList.append({'rating': str(rating), 'sync': rating>=8,
                                                   'filename': title, 'subtitle_id': fid,
                                                   'language_flag': 'flags/' + \
                                                   languageTranslate(sratimToScript(language),0,2) + \
@@ -132,7 +155,8 @@ def getAllTVSubtitles(subtitlePageID,languageList,subtitlesList,season,episode):
                         # Check if the subtitles found match one of our languages was selected
                         # by the user
                         if (sratimToScript(language) in languageList):
-                            subtitlesList.append({'rating': '0', 'sync': False,
+                            rating=getrating(title,fname)
+                            subtitlesList.append({'rating': str(rating), 'sync': rating>=8,
                                                   'filename': title, 'subtitle_id': fid,
                                                   'language_flag': 'flags/' + \
                                                   languageTranslate(sratimToScript(language),0,2) + \
@@ -237,7 +261,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
         # Go over all the subtitle pages and add results to our list if season
         # and episode match
         for sid in subtitleIDs:
-            getAllTVSubtitles(sid,languageList,subtitlesList,season,episode)
+            getAllTVSubtitles(os.path.basename(file_original_path),sid,languageList,subtitlesList,season,episode)
     else:
         # Find sratim's subtitle page IDs
         subtitleIDs = re.findall(SEARCH_RESULTS_PATTERN, searchResults)

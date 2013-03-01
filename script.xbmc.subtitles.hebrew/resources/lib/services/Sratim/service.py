@@ -32,11 +32,12 @@ debug_pretext = ""
 TV_SEARCH_RESULTS_PATTERN = "<a href=\"viewseries.php\?id=(\d+)[^>]*?title=.*?>"
 SEARCH_RESULTS_PATTERN = "<a href=\"view.php\?id=(\d+)[^>]*?title=.*?>"
 SUBTITLE_LIST_PATTERN = "downloadsubtitle\.php\?id=(?P<fid>\d*).*?subt_lang.*?title=\"(?P<language>.*?)\".*?subtitle_title.*?title=\"(?P<title>.*?)\""
-SSUBTITLE_LIST_PATTERN = "l\.php\?surl=(?P<fid>\d*).*?subt_lang.*?title=\"(?P<language>.*?)\".*?subtitle_title.*?title=\"(?P<title>.*?)\""
+SSUBTITLE_LIST_PATTERN = "l\.php\?surl=(?P<fid2>\d*).*?subt_lang.*?title=\"(?P<language2>.*?)\".*?subtitle_title.*?title=\"(?P<title2>.*?)\""
+COMBINED = SUBTITLE_LIST_PATTERN + "|" + SSUBTITLE_LIST_PATTERN
 TV_SEASON_PATTERN = "seasonlink_(?P<slink>\d+).*?>(?P<snum>\d+)</a>"
 TV_EPISODE_PATTERN = "episodelink_(?P<elink>\d+).*?>(?P<enum>\d+)</a>"
 USER_AGENT = "Mozilla%2F4.0%20(compatible%3B%20MSIE%207.0%3B%20Windows%20NT%206.0)"
-releases_types   = ['web-dl', '480p', '720p', '1080p', 'h264', 'x264', 'xvid', 'aac20', 'hdtv', 'dvdrip', 'ac3', 'bluray', 'dd51', 'divx', 'proper', 'repack', 'pdtv', 'rerip', 'dts']
+releases_types   = ['web-dl', 'webrip', '480p', '720p', '1080p', 'h264', 'x264', 'xvid', 'ac3', 'aac', 'hdtv', 'dvdscr' ,'dvdrip', 'ac3', 'brrip', 'bluray', 'dd51', 'divx', 'proper', 'repack', 'pdtv', 'rerip', 'dts']
 
 #===============================================================================
 # Private utility functions
@@ -58,7 +59,7 @@ def sratimToScript(language):
 def getrating(subsfile, videofile):
     x=0
     rating = 0
-    log(__name__ ,"testing subname\n %s[subname] \n %s[filename]" % (subsfile,videofile))
+    log(__name__ ,"# Comparing Releases:\n %s [subtitle-rls] \n %s  [filename-rls]" % (subsfile,videofile))
     videofile = "".join(videofile.split('.')[:-1]).lower()
     subsfile = subsfile.lower().replace('.', '')
     videofile = videofile.replace('.', '')
@@ -66,15 +67,14 @@ def getrating(subsfile, videofile):
         if (release_type in videofile):
             x+=1
             if (release_type in subsfile): rating += 1
-    log(__name__ ,"   Rating is= %s " % (rating))
-    rating=rating/float(x)
-    log(__name__ ,"   x= %s (r,x) Result is:  %f" % (x,rating))
-    rating*=4
-    log(__name__ ,"   x= %s Result is:  %f" % (x,rating))
+    if(x): rating=(rating/float(x))*4
+    # Compare group name
     if videofile.split('-')[-1] == subsfile.split('-')[-1] : rating += 1
+    # Group name didnt match try to see if group name is in the beginning (less info on file less weight)
+    elif videofile.split('-')[0] == subsfile.split('-')[-1] : rating += 0.5
     if rating > 0:
         rating = rating * 2
-        #log(__name__ ,"    Final is:  %s" % (rating)
+    log(__name__ ,"# Result is:  %f" % rating)
     return round(rating)
     
 # Returns the content of the given URL. Used for both html and subtitle files.
@@ -98,10 +98,14 @@ def getURL(url):
 def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
     # Retrieve the subtitles page (html)
     subtitlePage = getURL(BASE_URL + "view.php?id=" + subtitlePageID + "&m=subtitles#")
-    
     # Create a list of all subtitles found on page
-    foundSubtitles = re.findall(SUBTITLE_LIST_PATTERN, subtitlePage)
-    for (fid,language,title) in foundSubtitles:
+    foundSubtitles = re.findall(COMBINED, subtitlePage)
+    for (fid,language,title,fid2,language2,title2) in foundSubtitles:
+        # Create Dictionery for XBMC Gui
+        if(fid2):
+            fid=fid2
+            language=language2
+            title=title2
         # Check if the subtitles found match one of our languages was selected
         # by the user
         if (sratimToScript(language) in languageList):
@@ -109,23 +113,12 @@ def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
                                   'filename': title, 'subtitle_id': fid,
                                   'language_flag': 'flags/' + \
                                   languageTranslate(sratimToScript(language),0,2) + \
-                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': False})
+                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': fid2!=None})
 								  
-	# Create a list of all subtitles from sendspace							  
-	foundSubtitles = re.findall(SSUBTITLE_LIST_PATTERN, subtitlePage)							  
-    for (fid,language,title) in foundSubtitles:
-        # Check if the subtitles found match one of our languages was selected
-        # by the user
-        if (sratimToScript(language) in languageList):
-            subtitlesList.append({'rating': '0', 'sync': False,
-                                  'filename': title, 'subtitle_id': fid,
-                                  'language_flag': 'flags/' + \
-                                  languageTranslate(sratimToScript(language),0,2) + \
-                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': True})
-
 # Same as getAllSubtitles() but receives season and episode numbers and find them.
 def getAllTVSubtitles(fname,subtitlePageID,languageList,subtitlesList,season,episode):
     # Retrieve the subtitles page (html)
+    subs= []
     subtitlePage = getURL(BASE_URL + "viewseries.php?id=" + subtitlePageID + "&m=subtitles#")
     # Retrieve the requested season
     foundSeasons = re.findall(TV_SEASON_PATTERN, subtitlePage)
@@ -138,29 +131,28 @@ def getAllTVSubtitles(fname,subtitlePageID,languageList,subtitlesList,season,epi
                 if (episode_num == episode):
                     subtitlePage = getURL(BASE_URL + "viewseries.php?id=" + subtitlePageID + "&m=subtitles&s="+str(season_link)+"&e="+str(episode_link))
                     # Create a list of all subtitles found on page
-                    foundSubtitles = re.findall(SUBTITLE_LIST_PATTERN, subtitlePage)
-                    for (fid,language,title) in foundSubtitles:
+                    foundSubtitles = re.findall(COMBINED, subtitlePage)
+                    for (fid,language,title,fid2,language2,title2) in foundSubtitles:
+                        # Create Dictionery for XBMC Gui
+                        if(fid2):
+                            fid=fid2
+                            language=language2
+                            title=title2
                         # Check if the subtitles found match one of our languages was selected
                         # by the user
                         if (sratimToScript(language) in languageList):
                             rating=getrating(title,fname)
-                            subtitlesList.append({'rating': str(rating), 'sync': rating>=8,
+                            subs.append({'rating': str(rating), 'sync': rating>=8,
                                                   'filename': title, 'subtitle_id': fid,
                                                   'language_flag': 'flags/' + \
                                                   languageTranslate(sratimToScript(language),0,2) + \
-                                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': False})
-                    # Create a list of all subtitles from sendspace							  
-                    foundSubtitles = re.findall(SSUBTITLE_LIST_PATTERN, subtitlePage)							  
-                    for (fid,language,title) in foundSubtitles:
-                        # Check if the subtitles found match one of our languages was selected
-                        # by the user
-                        if (sratimToScript(language) in languageList):
-                            rating=getrating(title,fname)
-                            subtitlesList.append({'rating': str(rating), 'sync': rating>=8,
-                                                  'filename': title, 'subtitle_id': fid,
-                                                  'language_flag': 'flags/' + \
-                                                  languageTranslate(sratimToScript(language),0,2) + \
-                                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': True})
+                                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': fid2!=None})
+    # sort, to put syncs on top
+    subs = sorted(subs,key=lambda x: int(float(x['rating'])))
+    for item in subs:
+        subtitlesList.insert(0,item)
+
+
 
 
 # Extracts the downloaded file and find a new sub/srt file to return.

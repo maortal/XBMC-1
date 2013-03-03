@@ -102,7 +102,7 @@ def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
     foundSubtitles = re.findall(COMBINED, subtitlePage)
     for (fid,language,title,fid2,language2,title2) in foundSubtitles:
         # Create Dictionery for XBMC Gui
-        if(fid2):
+        if(fid2 and len(fid2)>0):
             fid=fid2
             language=language2
             title=title2
@@ -113,7 +113,7 @@ def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
                                   'filename': title, 'subtitle_id': fid,
                                   'language_flag': 'flags/' + \
                                   languageTranslate(sratimToScript(language),0,2) + \
-                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': fid2!=None})
+                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': (fid2 and len(fid2)>0)})
 								  
 # Same as getAllSubtitles() but receives season and episode numbers and find them.
 def getAllTVSubtitles(fname,subtitlePageID,languageList,subtitlesList,season,episode):
@@ -133,8 +133,9 @@ def getAllTVSubtitles(fname,subtitlePageID,languageList,subtitlesList,season,epi
                     # Create a list of all subtitles found on page
                     foundSubtitles = re.findall(COMBINED, subtitlePage)
                     for (fid,language,title,fid2,language2,title2) in foundSubtitles:
+                        log( __name__ ,"%s Is sendspace?: %s" % (debug_pretext, fid2!=None))
                         # Create Dictionery for XBMC Gui
-                        if(fid2):
+                        if(fid2 and len(fid2)>0):
                             fid=fid2
                             language=language2
                             title=title2
@@ -146,7 +147,7 @@ def getAllTVSubtitles(fname,subtitlePageID,languageList,subtitlesList,season,epi
                                                   'filename': title, 'subtitle_id': fid,
                                                   'language_flag': 'flags/' + \
                                                   languageTranslate(sratimToScript(language),0,2) + \
-                                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': fid2!=None})
+                                                  '.gif', 'language_name': sratimToScript(language), 'sendspace': (fid2 and len(fid2)>0)})
     # sort, to put syncs on top
     subs = sorted(subs,key=lambda x: int(float(x['rating'])))
     for item in subs:
@@ -281,6 +282,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
 def download_subtitles (subtitles_list, pos, zip_subs, tmp_sub_dir, sub_folder, session_id): #standard input
     subtitle_id = subtitles_list[pos][ "subtitle_id" ]
     language = subtitles_list[pos][ "language_name" ]	
+    log( __name__ ,"%s Is subtitle related to sendspace? %s" % (debug_pretext, subtitles_list[pos][ "sendspace" ]))
     if (not subtitles_list[pos][ "sendspace" ]):
         url = BASE_URL + "downloadsubtitle.php?id=" + subtitle_id
         content = getURL(url)
@@ -289,7 +291,7 @@ def download_subtitles (subtitles_list, pos, zip_subs, tmp_sub_dir, sub_folder, 
     else:
         url = BASE_URL + "l.php?surl=" + subtitle_id
         content = getURL(url)
-        url = re.search(r'<a id="download_button" href?="(.+sendspace.+\.rar)" ', content)
+        url = re.search(r'<a id="download_button" href?="(.+sendspace.+\.\w\w\w)" ', content)
         content = None
         if (url):
             url = url.group(1)

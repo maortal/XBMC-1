@@ -116,7 +116,7 @@ def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
                                   '.gif', 'language_name': sratimToScript(language), 'sendspace': (fid2 and len(fid2)>0)})
 								  
 # Same as getAllSubtitles() but receives season and episode numbers and find them.
-def getAllTVSubtitles(fname,subtitlePageID,languageList,subtitlesList,season,episode):
+def getAllTVSubtitles(fname,subtitlePageID,languageList,season,episode):
     # Retrieve the subtitles page (html)
     subs= []
     subtitlePage = getURL(BASE_URL + "viewseries.php?id=" + subtitlePageID + "&m=subtitles#")
@@ -149,9 +149,7 @@ def getAllTVSubtitles(fname,subtitlePageID,languageList,subtitlesList,season,epi
                                                   languageTranslate(sratimToScript(language),0,2) + \
                                                   '.gif', 'language_name': sratimToScript(language), 'sendspace': (fid2 and len(fid2)>0)})
     # sort, to put syncs on top
-    subs = sorted(subs,key=lambda x: int(float(x['rating'])))
-    for item in subs:
-        subtitlesList.insert(0,item)
+    return sorted(subs,key=lambda x: int(float(x['rating'])),reverse=True)
 
 
 
@@ -246,7 +244,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
 
     # When searching for episode 1 Sratim.co.il returns episode 1,10,11,12 etc'
     # so we need to catch with out pattern the episode and season numbers and
-    # only retrieve subtitles from the right result pages.
+    # only retrieve subtitles from the right result pages.s
     if tvshow:
         # Find sratim's subtitle page IDs
         subtitleIDs = re.findall(TV_SEARCH_RESULTS_PATTERN,
@@ -254,7 +252,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
         # Go over all the subtitle pages and add results to our list if season
         # and episode match
         for sid in subtitleIDs:
-            getAllTVSubtitles(os.path.basename(file_original_path),sid,languageList,subtitlesList,season,episode)
+            subtitlesList = getAllTVSubtitles(os.path.basename(file_original_path),sid,languageList,season,episode)
     else:
         # Find sratim's subtitle page IDs
         subtitleIDs = re.findall(SEARCH_RESULTS_PATTERN, searchResults)
@@ -295,7 +293,7 @@ def download_subtitles (subtitles_list, pos, zip_subs, tmp_sub_dir, sub_folder, 
         content = None
         if (url):
             url = url.group(1)
-            log( __name__ ,"%s Fetching from subtitles sendspace.com using url %s" % (debug_pretext, url))
+            log( __name__ ,"%s Fetching subtitles from sendspace.com using url %s" % (debug_pretext, url))
             content = getURL(url)
             filename = "rarsubs" + re.search(r'\.\w\w\w$',url).group(0)
     # Get the file content using geturl()

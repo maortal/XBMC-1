@@ -105,7 +105,8 @@ def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
                             'subtitle_id': foundSubtitles[language][translator][quality][rating]["id"],
                             'language_flag': 'flags/' + language + '.gif',
                             'language_name': languageTranslate(language, 2, 0),
-                            'key': foundSubtitles[language][translator][quality][rating]["key"]})
+                            'key': foundSubtitles[language][translator][quality][rating]["key"],
+                            'notes': re.search('http://www\.sendspace\.com/file/\w+$',foundSubtitles[language][translator][quality][rating]["notes"])})
 
 # Extracts the downloaded file and find a new sub/srt file to return.
 # Note that Sratim.co.il currently isn't hosting subtitles in .txt format but
@@ -245,12 +246,22 @@ def download_subtitles (subtitles_list, pos, zip_subs, tmp_sub_dir, sub_folder, 
     subtitle_id = subtitles_list[pos][ "subtitle_id" ]
     filename = subtitles_list[pos][ "filename" ]
     key = subtitles_list[pos][ "key" ]
-    url = BASE_URL + "/subtitle/download/"+languageTranslate(subtitles_list[pos][ "language_name" ], 0, 2)+"/"+str(subtitle_id)+"/?v="+filename+"&key="+key
-    log( __name__ ,"%s Fetching subtitles using url %s" % (debug_pretext, url))
-    # Get the intended filename (don't know if it's zip or rar)
-    archive_name = getURLfilename(url)
-    # Get the file content using geturl()
-    content = getURL(url)
+    if(subtitles_list[pos]["notes"]):
+        content = getURL(subtitles_list[pos]["notes"].group())
+        url = re.search(r'<a id="download_button" href?="(.+sendspace.+\.\w\w\w)" ', content)
+        content = None
+        if (url):
+            url = url.group(1)
+            log( __name__ ,"%s Fetching subtitles from sendspace.com using url %s" % (debug_pretext, url))
+            content = getURL(url)
+            archive_name = "rarsubs" + re.search(r'\.\w\w\w$',url).group(0)
+    else:
+        url = BASE_URL + "/subtitle/download/"+languageTranslate(subtitles_list[pos][ "language_name" ], 0, 2)+"/"+str(subtitle_id)+"/?v="+filename+"&key="+key
+        log( __name__ ,"%s Fetching subtitles using url %s" % (debug_pretext, url))
+        # Get the intended filename (don't know if it's zip or rar)
+        archive_name = getURLfilename(url)
+        # Get the file content using geturl()
+        content = getURL(url)
     subs_file = ""
     if content:
         local_tmp_file = os.path.join(tmp_sub_dir, archive_name)

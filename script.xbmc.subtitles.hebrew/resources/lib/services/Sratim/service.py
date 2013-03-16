@@ -95,13 +95,15 @@ def getURL(url):
 # The function receives a subtitles page id number, a list of user selected
 # languages and the current subtitles list and adds all found subtitles matching
 # the language selection to the subtitles list.
-def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
+def getAllSubtitles(fname,subtitlePageID,languageList,subtitlesList):
     # Retrieve the subtitles page (html)
+    subs= []
     subtitlePage = getURL(BASE_URL + "view.php?id=" + subtitlePageID + "&m=subtitles#")
     # Create a list of all subtitles found on page
     foundSubtitles = re.findall(COMBINED, subtitlePage)
     for (fid,language,title,fid2,language2,title2) in foundSubtitles:
-        # Create Dictionery for XBMC Gui
+        log( __name__ ,"%s Is sendspace?: %s" % (debug_pretext, fid2!=None))
+        #Create Dictionery for XBMC Gui
         if(fid2 and len(fid2)>0):
             fid=fid2
             language=language2
@@ -109,11 +111,14 @@ def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
         # Check if the subtitles found match one of our languages was selected
         # by the user
         if (sratimToScript(language) in languageList):
-            subtitlesList.append({'rating': '0', 'sync': False,
+            rating=getrating(title,fname)
+            subs.append({'rating': str(rating), 'sync': rating>=8,
                                   'filename': title, 'subtitle_id': fid,
                                   'language_flag': 'flags/' + \
                                   languageTranslate(sratimToScript(language),0,2) + \
                                   '.gif', 'language_name': sratimToScript(language), 'sendspace': (fid2 and len(fid2)>0)})
+    return sorted(subs,key=lambda x: int(float(x['rating'])),reverse=True)
+
 								  
 # Same as getAllSubtitles() but receives season and episode numbers and find them.
 def getAllTVSubtitles(fname,subtitlePageID,languageList,season,episode):
@@ -258,7 +263,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
         subtitleIDs = re.findall(SEARCH_RESULTS_PATTERN, searchResults)
         # Go over all the subtitle pages and add results to our list
         for sid in subtitleIDs:
-            getAllSubtitles(sid,languageList,subtitlesList)
+            subtitlesList = getAllSubtitles(os.path.basename(file_original_path),sid,languageList,subtitlesList)
 
     
     

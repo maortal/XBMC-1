@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 
 #===============================================================================
-# Sratim.co.il subtitles service.
-# Version: 2.4
+# Subtitle.co.il subtitles service.
+# Version: 3.0
 #
 # Change log:
 # 1.1 - Fixed bug with movie search: forgot to replace spaces with + signs.
@@ -14,10 +14,14 @@
 # 2.3 - Added User Agent to getURL, fixed string related bugs and patterns
 # 2.3.1 - stripped (year) from tvshow
 # 2.4 - Added support for idx+sub download from sendspace.com
+# 3.0 - Added rating algorithem that will try to match correct subtitle release to filename
+#       Sorted results list by rating
+#       subtitle with rating>8 will have SYNC icon and ability to auto download
 #
 # Created by: Ori Varon
 # Changed by: MeatHook (2.3)
 # Changed By: Maor Tal (2.4) 20/02/2013
+# Changed By: Maor Tal (3.0) 17/03/2013
 #===============================================================================
 import os, re, xbmc, xbmcgui, string, time, urllib2
 from utilities import languageTranslate, log
@@ -37,7 +41,7 @@ COMBINED = SUBTITLE_LIST_PATTERN + "|" + SSUBTITLE_LIST_PATTERN
 TV_SEASON_PATTERN = "seasonlink_(?P<slink>\d+).*?>(?P<snum>\d+)</a>"
 TV_EPISODE_PATTERN = "episodelink_(?P<elink>\d+).*?>(?P<enum>\d+)</a>"
 USER_AGENT = "Mozilla%2F4.0%20(compatible%3B%20MSIE%207.0%3B%20Windows%20NT%206.0)"
-releases_types   = ['web-dl', 'webrip', '480p', '720p', '1080p', 'h264', 'x264', 'xvid', 'ac3', 'aac', 'hdtv', 'dvdscr' ,'dvdrip', 'ac3', 'brrip', 'bluray', 'dd51', 'divx', 'proper', 'repack', 'pdtv', 'rerip', 'dts']
+releases_types   = ['2011','2009','2012','2010','2013','2014','web-dl', 'webrip', '480p', '720p', '1080p', 'h264', 'x264', 'xvid', 'ac3', 'aac', 'hdtv', 'dvdscr' ,'dvdrip', 'ac3', 'brrip', 'bluray', 'dd51', 'divx', 'proper', 'repack', 'pdtv', 'rerip', 'dts']
 
 #===============================================================================
 # Private utility functions
@@ -70,7 +74,8 @@ def getrating(subsfile, videofile):
     if(x): rating=(rating/float(x))*4
     # Compare group name
     if videofile.split('-')[-1] == subsfile.split('-')[-1] : rating += 1
-    # Group name didnt match try to see if group name is in the beginning (less info on file less weight)
+    # Group name didnt match 
+    # try to see if group name is in the beginning (less info on file less weight)
     elif videofile.split('-')[0] == subsfile.split('-')[-1] : rating += 0.5
     if rating > 0:
         rating = rating * 2
@@ -160,8 +165,6 @@ def getAllTVSubtitles(fname,subtitlePageID,languageList,season,episode):
 
 
 # Extracts the downloaded file and find a new sub/srt file to return.
-# Note that Sratim.co.il currently isn't hosting subtitles in .txt format but
-# is adding txt info files in their zips, hence not looking for txt.
 # Based on Titlovi's service.py
 def extractAndFindSub(tempSubDir,tempZipFile):
     # Remember the files currently in the folder and their number
@@ -247,11 +250,11 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
     if (not searchResults):
         return subtitlesList, "", "Search timed out, please try again later."
 
-    # When searching for episode 1 Sratim.co.il returns episode 1,10,11,12 etc'
+    # When searching for episode 1 subtitle.co.il returns episode 1,10,11,12 etc'
     # so we need to catch with out pattern the episode and season numbers and
     # only retrieve subtitles from the right result pages.s
     if tvshow:
-        # Find sratim's subtitle page IDs
+        # Find TvShow's subtitle page IDs
         subtitleIDs = re.findall(TV_SEARCH_RESULTS_PATTERN,
                                  unicode(searchResults,"utf-8"))
         # Go over all the subtitle pages and add results to our list if season
@@ -259,7 +262,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
         for sid in subtitleIDs:
             subtitlesList = getAllTVSubtitles(os.path.basename(file_original_path),sid,languageList,season,episode)
     else:
-        # Find sratim's subtitle page IDs
+        # Find Movie's subtitle page IDs
         subtitleIDs = re.findall(SEARCH_RESULTS_PATTERN, searchResults)
         # Go over all the subtitle pages and add results to our list
         for sid in subtitleIDs:
@@ -304,7 +307,7 @@ def download_subtitles (subtitles_list, pos, zip_subs, tmp_sub_dir, sub_folder, 
     # Get the file content using geturl()
     
     if content:
-        # Going to write them to standrad zip file (always zips in sratim)
+        # Going to write them to file
         local_tmp_file = os.path.join(tmp_sub_dir, filename)
         log( __name__ ,"%s Saving subtitles to '%s'" % (debug_pretext, local_tmp_file))
         try:

@@ -10,12 +10,12 @@
       <setting id="Podnapisi" type="bool" label="Podnapisi.net" default="true"/>
       <setting id="PNuser" type="text"  visible= "eq(-1,true)" enable="eq(-1,true)" label="30104" default=""/>
       <setting id="PNpass" type="text" option = "hidden" visible= "eq(-2,true)" enable="eq(-2,true)" label="30105" default=""/> 
-      <setting id="Sratim" type="bool" label="Sratim.co.il" default="true"/>
+      <setting id="Subtitle" type="bool" label="Subtitle.co.il" default="true"/>
       <setting id="Subscenter" type="bool" label="Subscenter.org" default="true"/>
     </category>
     <category label="30106">
-      <setting id="defmovieservice" type="select" mask="/" label="30113" default="Sratim" source="/resources/lib/services" />
-      <setting id="deftvservice" type="select" mask="/" label="30114" default="Sratim" source="/resources/lib/services" />    
+      <setting id="defmovieservice" type="select" mask="/" label="30113" default="Subtitle" source="/resources/lib/services" />
+      <setting id="deftvservice" type="select" mask="/" label="30114" default="Subtitle" source="/resources/lib/services" />    
       <setting id="subfolder" type="bool" label="30107" default="true" />
       <setting id="subfolderpath" type="folder" visible= "eq(-1,false)" source="files" label="30108" default="" />
       <setting id="searchstr" type="bool" label="30110" default="false"/>

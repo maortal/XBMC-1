@@ -107,7 +107,7 @@ def getAllSubtitles(fname,subtitlePageID,languageList,subtitlesList):
     # Create a list of all subtitles found on page
     foundSubtitles = re.findall(COMBINED, subtitlePage)
     for (fid,language,title,fid2,language2,title2) in foundSubtitles:
-        log( __name__ ,"%s Is sendspace?: %s" % (debug_pretext, fid2!=None))
+        log( __name__ ,"%s Is sendspace?: %s" % (debug_pretext, bool(fid2 and len(fid2)>0)))
         #Create Dictionery for XBMC Gui
         if(fid2 and len(fid2)>0):
             fid=fid2
@@ -143,7 +143,7 @@ def getAllTVSubtitles(fname,subtitlePageID,languageList,season,episode):
                     # Create a list of all subtitles found on page
                     foundSubtitles = re.findall(COMBINED, subtitlePage)
                     for (fid,language,title,fid2,language2,title2) in foundSubtitles:
-                        log( __name__ ,"%s Is sendspace?: %s" % (debug_pretext, fid2!=None))
+                        log( __name__ ,"%s Is sendspace?: %s" % (debug_pretext, bool(fid2 and len(fid2)>0)))
                         # Create Dictionery for XBMC Gui
                         if(fid2 and len(fid2)>0):
                             fid=fid2

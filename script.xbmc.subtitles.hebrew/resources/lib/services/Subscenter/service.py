@@ -2,7 +2,7 @@
 
 #===============================================================================
 # Subscenter.org subtitles service.
-# Version: 1.5.5
+# Version: 2.0
 #
 # Change log:
 # 1.1 - Fixed downloading of non-Hebrew subtitles.
@@ -11,10 +11,14 @@
 # 1.4 - Fixed key field (Thanks ILRHAES)
 # 1.5 - Added User Agent to getURL, fixed string related bugs and patterns
 # 1.5.5 - Bug Fix for (1.5)
+# 2.0 - Added rating algorithem 
+#       Added supports downloading IDX\SUBS from sendspace.compile
+#       Added sync icon added to files with rating>8
+#       Added sorted subtitlelist by rating
 #
 # Created by: Ori Varon
 # Changed by: MeatHook (1.5)
-# Changed by: Maor Tal 20/02/2013
+# Changed by: Maor Tal 17/03/2013 (1.5.5, 2.0)
 #===============================================================================
 import os, re, xbmc, xbmcgui, string, time, urllib2
 from utilities import languageTranslate, log
@@ -30,6 +34,7 @@ debug_pretext = ""
 MULTI_RESULTS_PAGE_PATTERN = u"עמוד (?P<curr_page>\d*) \( סך הכל: (?P<total_pages>\d*) \)"
 MOVIES_SEARCH_RESULTS_PATTERN = "<div class=\"generalWindowRight\">.*?<a href=\"(?P<sid>/he/subtitle/movie/.*?)\">.*?<div class=\"generalWindowBottom\">"
 TV_SEARCH_RESULTS_PATTERN = "<div class=\"generalWindowRight\">.*?<a href=\"(?P<sid>/he/subtitle/series/.*?)\">.*?<div class=\"generalWindowBottom\">"
+releases_types   = ['2011','2009','2012','2010','2013','2014','web-dl', 'webrip', '480p', '720p', '1080p', 'h264', 'x264', 'xvid', 'ac3', 'aac', 'hdtv', 'dvdscr' ,'dvdrip', 'ac3', 'brrip', 'bluray', 'dd51', 'divx', 'proper', 'repack', 'pdtv', 'rerip', 'dts']
 
 #===============================================================================
 # Private utility functions
@@ -70,12 +75,35 @@ def getURLfilename(url):
         log( __name__ ,"Failed to get url: %s" % (url))
     # Second parameter is the filename
     return filename
-
+    
+def getrating(subsfile, videofile):
+    x=0
+    rating = 0
+    log(__name__ ,"# Comparing Releases:\n %s [subtitle-rls] \n %s  [filename-rls]" % (subsfile,videofile))
+    videofile = "".join(videofile.split('.')[:-1]).lower()
+    subsfile = subsfile.lower().replace('.', '')
+    videofile = videofile.replace('.', '')
+    for release_type in releases_types:
+        if (release_type in videofile):
+            x+=1
+            if (release_type in subsfile): rating += 1
+    if(x): rating=(rating/float(x))*4
+    # Compare group name
+    if videofile.split('-')[-1] == subsfile.split('-')[-1] : rating += 1
+    # Group name didnt match 
+    # try to see if group name is in the beginning (less info on file less weight)
+    elif videofile.split('-')[0] == subsfile.split('-')[-1] : rating += 0.5
+    if rating > 0:
+        rating = rating * 2
+    log(__name__ ,"# Result is:  %f" % rating)
+    return round(rating)
+    
 # The function receives a subtitles page id number, a list of user selected
 # languages and the current subtitles list and adds all found subtitles matching
 # the language selection to the subtitles list.
-def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
+def getAllSubtitles(subtitlePageID,languageList,fname):
     # Retrieve the subtitles page (html)
+    subs= []
     try:
         subtitlePage = getURL(BASE_URL + subtitlePageID)
     except:
@@ -93,20 +121,24 @@ def getAllSubtitles(subtitlePageID,languageList,subtitlesList):
     toExec = toExec[:toExec.rfind("}")+1]
     # Replace "null" with "None"
     toExec = toExec.replace("null","None")
-    exec(toExec)
+    exec(toExec) in globals(), locals()
     log( __name__ ,"Built webpage dictionary")
     for language in foundSubtitles.keys():
         if (languageTranslate(language, 2, 0) in languageList): 
             for translator in foundSubtitles[language]:
                 for quality in foundSubtitles[language][translator]:
                     for rating in foundSubtitles[language][translator][quality]:
-                        subtitlesList.append({'rating': rating, 'sync': False,
-                            'filename': foundSubtitles[language][translator][quality][rating]["subtitle_version"],
+                        title=foundSubtitles[language][translator][quality][rating]["subtitle_version"]
+                        Srating=getrating(title,fname)
+                        subs.append({'rating': str(Srating), 'sync': Srating>=8,
+                            'filename': title,
                             'subtitle_id': foundSubtitles[language][translator][quality][rating]["id"],
                             'language_flag': 'flags/' + language + '.gif',
                             'language_name': languageTranslate(language, 2, 0),
                             'key': foundSubtitles[language][translator][quality][rating]["key"],
                             'notes': re.search('http://www\.sendspace\.com/file/\w+$',foundSubtitles[language][translator][quality][rating]["notes"])})
+    # sort, to put syncs on top
+    return sorted(subs,key=lambda x: int(float(x['rating'])),reverse=True)
 
 # Extracts the downloaded file and find a new sub/srt file to return.
 # Note that Sratim.co.il currently isn't hosting subtitles in .txt format but
@@ -224,7 +256,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
         for i in range(len(subtitleIDs)):
             subtitleIDs[i] += season+"/"+episode+"/" 
     for sid in subtitleIDs:
-        getAllSubtitles(sid,languageList,subtitlesList)
+        subtitlesList=subtitlesList + getAllSubtitles(sid,languageList,os.path.basename(file_original_path))
     
     
     # Standard output -
@@ -246,8 +278,11 @@ def download_subtitles (subtitles_list, pos, zip_subs, tmp_sub_dir, sub_folder, 
     subtitle_id = subtitles_list[pos][ "subtitle_id" ]
     filename = subtitles_list[pos][ "filename" ]
     key = subtitles_list[pos][ "key" ]
+    # check if need to download subtitle from sendspace
     if(subtitles_list[pos]["notes"]):
+        # log to sendspace
         content = getURL(subtitles_list[pos]["notes"].group())
+        # find download link
         url = re.search(r'<a id="download_button" href?="(.+sendspace.+\.\w\w\w)" ', content)
         content = None
         if (url):

@@ -256,7 +256,8 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
         for i in range(len(subtitleIDs)):
             subtitleIDs[i] += season+"/"+episode+"/" 
     for sid in subtitleIDs:
-        subtitlesList=subtitlesList + getAllSubtitles(sid,languageList,os.path.basename(file_original_path))
+        tmp = getAllSubtitles(sid,languageList,os.path.basename(file_original_path))
+        subtitlesList=subtitlesList + ((tmp) if tmp else [])
     
     
     # Standard output -

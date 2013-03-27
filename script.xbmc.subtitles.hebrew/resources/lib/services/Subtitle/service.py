@@ -260,7 +260,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
         # Go over all the subtitle pages and add results to our list if season
         # and episode match
         for sid in subtitleIDs:
-            subtitlesList = getAllTVSubtitles(os.path.basename(file_original_path),sid,languageList,season,episode)
+            subtitlesList =subtitlesList + getAllTVSubtitles(os.path.basename(file_original_path),sid,languageList,season,episode)
     else:
         # Find Movie's subtitle page IDs
         subtitleIDs = re.findall(SEARCH_RESULTS_PATTERN, searchResults)

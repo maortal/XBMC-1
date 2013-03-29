@@ -1,3 +1,22 @@
+4.1.2
+- (subtitle) fix for movies
+
+4.1.1
+- (fix) bug fix for subtitle and Subscenter
+
+4.1.0
+- (Subscenter) added all features from subtitle.co.il
+- (Subtitle) fixed log message
+
+4.0.0
+- Added rating algorithem
+- Sratim now known as Subtitle
+- Support Russis
+
+3.9.9 
+- (Subscenter) now support IDX\SUB
+- Update logo Sratim & Subscenter (10x CaTz)
+
 3.9.7
 - [fix] fixed bug in OpenSubtitles
 - Remove all un-needed sites and langs

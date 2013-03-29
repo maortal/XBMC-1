@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
     <category label="30100">
-      <setting id="Lang01" type="select" label="30101" default="2" lvalues="30212|30218" />
-      <setting id="Lang02" type="select" label="30212" default="1" lvalues="30212|30218" />
-      <setting id="Lang03" type="select" label="30212" default="1" lvalues="30212|30218" />
+      <setting id="Lang01" type="select" label="30101" default="1" lvalues="30212|30218|30215|30236" />
+      <setting id="Lang02" type="select" label="30102" default="0" lvalues="30212|30218|30215|30236" />
+      <setting id="Lang03" type="select" label="30111" default="2" lvalues="30212|30218|30215|30236" />
     </category>
     <category label="30103">
       <setting id="OpenSubtitles" type="bool" label="OpenSubtitles.org" default="true"/>

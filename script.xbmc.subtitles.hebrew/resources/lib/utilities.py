@@ -33,7 +33,9 @@ LANGUAGES      = (
     # Full Language name[0]     podnapisi[1]  ISO 639-1[2]   ISO 639-1 Code[3]   Script Setting Language[4]   localized name id number[5]
     
     ("English"                    , "2",        "en",            "eng",                 "0",                     30212  ),
-    ("Hebrew"                     , "22",       "he",            "heb",                 "1",                     30218  ),)
+    ("Hebrew"                     , "22",       "he",            "heb",                 "1",                     30218  ),
+    ("French"                     , "8",        "fr",            "fre",                 "2",                     30215  ),
+    ("Russian"                    , "27",       "ru",            "rus",                 "3",                     30236  ),)
 
 
 REGEX_EXPRESSIONS = [ '[Ss]([0-9]+)[][._-]*[Ee]([0-9]+)([^\\\\/]*)$',

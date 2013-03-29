@@ -17,6 +17,7 @@
 # 3.0 - Added rating algorithem that will try to match correct subtitle release to filename
 #       Sorted results list by rating
 #       subtitle with rating>8 will have SYNC icon and ability to auto download
+# 3.0.1 - Bug fix
 #
 # Created by: Ori Varon
 # Changed by: MeatHook (2.3)
@@ -100,7 +101,7 @@ def getURL(url):
 # The function receives a subtitles page id number, a list of user selected
 # languages and the current subtitles list and adds all found subtitles matching
 # the language selection to the subtitles list.
-def getAllSubtitles(fname,subtitlePageID,languageList,subtitlesList):
+def getAllSubtitles(fname,subtitlePageID,languageList):
     # Retrieve the subtitles page (html)
     subs= []
     subtitlePage = getURL(BASE_URL + "view.php?id=" + subtitlePageID + "&m=subtitles#")
@@ -266,7 +267,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
         subtitleIDs = re.findall(SEARCH_RESULTS_PATTERN, searchResults)
         # Go over all the subtitle pages and add results to our list
         for sid in subtitleIDs:
-            subtitlesList = getAllSubtitles(os.path.basename(file_original_path),sid,languageList,subtitlesList)
+            subtitlesList =subtitlesList + getAllSubtitles(os.path.basename(file_original_path),sid,languageList)
 
     
     

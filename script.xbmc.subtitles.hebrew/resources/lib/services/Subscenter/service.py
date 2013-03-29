@@ -15,6 +15,7 @@
 #       Added supports downloading IDX\SUBS from sendspace.compile
 #       Added sync icon added to files with rating>8
 #       Added sorted subtitlelist by rating
+# 2.0.1 - Bug fix
 #
 # Created by: Ori Varon
 # Changed by: MeatHook (1.5)

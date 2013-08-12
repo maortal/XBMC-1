@@ -7,11 +7,13 @@
     </category>
     <category label="30103">
       <setting id="OpenSubtitles" type="bool" label="OpenSubtitles.org" default="true"/>
-      <setting id="Podnapisi" type="bool" label="Podnapisi.net" default="true"/>
+      <setting id="Podnapisi" type="bool" label="Podnapisi.net" default="false"/>
       <setting id="PNuser" type="text"  visible= "eq(-1,true)" enable="eq(-1,true)" label="30104" default=""/>
       <setting id="PNpass" type="text" option = "hidden" visible= "eq(-2,true)" enable="eq(-2,true)" label="30105" default=""/> 
-      <setting id="Subtitle" type="bool" label="Subtitle.co.il" default="true"/>
-      <setting id="Subscenter" type="bool" label="Subscenter.org" default="true"/>
+      <setting id="Subtitle" type="bool" label="Subtitle.co.il" default="false"/>
+      <setting id="SUBuser" type="text"  visible= "eq(-1,true)" enable="eq(-1,true)" label="30248" default=""/>
+      <setting id="SUBpass" type="text" option = "hidden" visible= "eq(-2,true)" enable="eq(-2,true)" label="30249" default=""/> 
+	  <setting id="Subscenter" type="bool" label="Subscenter.org" default="true"/>
     </category>
     <category label="30106">
       <setting id="defmovieservice" type="select" mask="/" label="30113" default="Subtitle" source="/resources/lib/services" />

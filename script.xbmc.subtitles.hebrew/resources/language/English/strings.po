@@ -568,3 +568,11 @@ msgstr ""
 msgctxt "#30247"
 msgid "Farsi"
 msgstr ""
+
+msgctxt "#30248"
+msgid "- Subtitle.co.il Username"
+msgstr ""
+
+msgctxt "#30249"
+msgid "- Subtitle.co.il Password"
+msgstr ""

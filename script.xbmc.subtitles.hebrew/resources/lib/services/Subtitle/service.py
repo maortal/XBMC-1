@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
-
 #===============================================================================
 # Subtitle.co.il subtitles service.
-# Version: 3.0
+# Version: 3.0.3
 #
 # Change log:
 # 1.1 - Fixed bug with movie search: forgot to replace spaces with + signs.
@@ -18,17 +17,24 @@
 #       Sorted results list by rating
 #       subtitle with rating>8 will have SYNC icon and ability to auto download
 # 3.0.1 - Bug fix
+# 3.0.2 - Added free user & password.
+# 3.0.3 - Added email & password settings.
 #
 # Created by: Ori Varon
 # Changed by: MeatHook (2.3)
 # Changed By: Maor Tal (2.4) 20/02/2013
 # Changed By: Maor Tal (3.0) 17/03/2013
+# Changed By: thisisbbln (3.0.2) 12/08/2013
+# Changed By: thisisbbln (3.0.3) 12/08/2013
 #===============================================================================
-import os, re, xbmc, xbmcgui, string, time, urllib2
+import sys, os, re, xbmc, xbmcgui, string, time, urllib, urllib2, cookielib
+
 from utilities import languageTranslate, log
 
 BASE_URL = "http://www.subtitle.co.il/"
 debug_pretext = ""
+
+__addon__      = sys.modules[ "__main__" ].__addon__
 
 #===============================================================================
 # Regular expression patterns
@@ -45,8 +51,32 @@ USER_AGENT = "Mozilla%2F4.0%20(compatible%3B%20MSIE%207.0%3B%20Windows%20NT%206.
 releases_types   = ['2011','2009','2012','2010','2013','2014','web-dl', 'webrip', '480p', '720p', '1080p', 'h264', 'x264', 'xvid', 'ac3', 'aac', 'hdtv', 'dvdscr' ,'dvdrip', 'ac3', 'brrip', 'bluray', 'dd51', 'divx', 'proper', 'repack', 'pdtv', 'rerip', 'dts']
 
 #===============================================================================
+# User data
+#===============================================================================
+user_email = __addon__.getSetting( "SUBuser" )
+user_pass = __addon__.getSetting( "SUBpass" )
+
+cookies = cookielib.CookieJar()
+
+#===============================================================================
 # Private utility functions
 #===============================================================================
+
+def login():
+    # Reading cookies into cookiejar, will be used in getUrl()
+    log( __name__ ,"Login to Subtitle.co.il")
+    try:
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies))
+        log( __name__ ,"Login to Subtitle.co.il 1")
+        opener.addheaders = [('User-Agent', USER_AGENT)]
+        log( __name__ ,"Login to Subtitle.co.il 2")
+        data = urllib.urlencode({'email': user_email, 'password': user_pass, 'Login': 'התחבר' })
+        log( __name__ ,"Login to Subtitle.co.il 3")
+        # data returned from this pages contains redirection
+        response = opener.open(BASE_URL + "login.php", data)
+    except:
+        log( __name__ ,"Subtitle.co.il - Login failed")
+        log( __name__ ,sys.exc_info())
 
 # Returns the corresponding script language name for the Hebrew unicode language
 def sratimToScript(language):
@@ -90,9 +120,9 @@ def getURL(url):
     content = None
     log( __name__ ,"Getting url: %s" % (url))
     try:
-        req = urllib2.Request(url)
-        req.add_unredirected_header('User-Agent', USER_AGENT)
-        response = urllib2.urlopen(req)        
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookies))
+        opener.addheaders = [('User-Agent', USER_AGENT)]
+        response = opener.open(url)  
         content = response.read()
     except:
         log( __name__ ,"Failed to get url:%s" % (url))
@@ -125,7 +155,7 @@ def getAllSubtitles(fname,subtitlePageID,languageList):
                                   '.gif', 'language_name': sratimToScript(language), 'sendspace': (fid2 and len(fid2)>0)})
     return sorted(subs,key=lambda x: int(float(x['rating'])),reverse=True)
 
-								  
+                                  
 # Same as getAllSubtitles() but receives season and episode numbers and find them.
 def getAllTVSubtitles(fname,subtitlePageID,languageList,season,episode):
     # Retrieve the subtitles page (html)
@@ -230,6 +260,7 @@ def extractAndFindSub(tempSubDir,tempZipFile):
 # rar -> True iff video is inside a rar archive
 # lang1, lang2, lang3 -> Languages selected by the user
 def search_subtitles( file_original_path, title, tvshow, year, season, episode, set_temp, rar, lang1, lang2, lang3, stack ): #standard input
+    login()
 
     subtitlesList = []
     # List of user languages - easier to manipulate
@@ -241,9 +272,9 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
         searchString = re.split(r'\s\(\w+\)$',tvshow)[0].replace(" ","+")
     else:
         searchString = title.replace(" ","+")
-    	
+        
     log( __name__ ,"%s Search string = *%s*" % (debug_pretext, title))
-	
+    
     # Retrieve the search results (html)
 
     searchResults = getURL(BASE_URL + "browse.php?q=" + searchString)
@@ -288,7 +319,7 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
 # session_id -> Same session_id returned in search function
 def download_subtitles (subtitles_list, pos, zip_subs, tmp_sub_dir, sub_folder, session_id): #standard input
     subtitle_id = subtitles_list[pos][ "subtitle_id" ]
-    language = subtitles_list[pos][ "language_name" ]	
+    language = subtitles_list[pos][ "language_name" ]   
     log( __name__ ,"%s Is subtitle related to sendspace? %s" % (debug_pretext, subtitles_list[pos][ "sendspace" ]))
     if (not subtitles_list[pos][ "sendspace" ]):
         url = BASE_URL + "downloadsubtitle.php?id=" + subtitle_id

@@ -528,3 +528,11 @@ msgstr "וייטנאמית"
 msgctxt "#30247"
 msgid "Farsi"
 msgstr "פרסית"
+
+msgctxt "#30248"
+msgid "- Subtitle.co.il Username"
+msgstr "- שם משתמש ב־Subtitle.co.il"
+
+msgctxt "#30249"
+msgid "- Subtitle.co.il Password"
+msgstr "- ססמה ב־Subtitle.co.il"

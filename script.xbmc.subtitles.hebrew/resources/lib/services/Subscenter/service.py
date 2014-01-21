@@ -24,7 +24,7 @@
 import os, re, xbmc, xbmcgui, string, time, urllib2
 from utilities import languageTranslate, log
 
-BASE_URL = "http://www.subscenter.org"
+BASE_URL = "http://subscenter.cinemast.com"
 USER_AGENT = "Mozilla%2F4.0%20(compatible%3B%20MSIE%207.0%3B%20Windows%20NT%206.0)"
 debug_pretext = ""
 
@@ -114,10 +114,7 @@ def getAllSubtitles(subtitlePageID,languageList,fname):
     if (not subtitlePage):
         return
     # Find subtitles dictionary declaration on page
-    tempStart = subtitlePage.index("subtitles_groups = ")
-    # Look for the following line break
-    tempEnd = subtitlePage.index("\n",tempStart)
-    toExec = "foundSubtitles = "+subtitlePage[tempStart+len("subtitles_groups = "):tempEnd]
+    toExec = "foundSubtitles = " + subtitlePage
     # Remove junk at the end of the line
     toExec = toExec[:toExec.rfind("}")+1]
     # Replace "null" with "None"
@@ -255,6 +252,11 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
     # If looking for tvshos try to append season and episode to url
     if tvshow:
         for i in range(len(subtitleIDs)):
+            subtitleIDs[i] = subtitleIDs[i].replace("/subtitle/","/cinemast/data/")
+            if (tvshow):
+                subtitleIDs[i]=subtitleIDs[i].replace("/series/","/series/sb/")
+            else:
+                subtitleIDs[i]=subtitleIDs[i].replace("/movies/","/movies/sb/")
             subtitleIDs[i] += season+"/"+episode+"/" 
     for sid in subtitleIDs:
         tmp = getAllSubtitles(sid,languageList,os.path.basename(file_original_path))
@@ -293,7 +295,7 @@ def download_subtitles (subtitles_list, pos, zip_subs, tmp_sub_dir, sub_folder, 
             content = getURL(url)
             archive_name = "rarsubs" + re.search(r'\.\w\w\w$',url).group(0)
     else:
-        url = BASE_URL + "/subtitle/download/"+languageTranslate(subtitles_list[pos][ "language_name" ], 0, 2)+"/"+str(subtitle_id)+"/?v="+filename+"&key="+key
+        url = BASE_URL + "/" + languageTranslate(subtitles_list[pos][ "language_name" ], 0, 2)+"/subtitle/download/"+languageTranslate(subtitles_list[pos][ "language_name" ], 0, 2)+"/"+str(subtitle_id)+"/?v="+filename+"&key="+key
         log( __name__ ,"%s Fetching subtitles using url %s" % (debug_pretext, url))
         # Get the intended filename (don't know if it's zip or rar)
         archive_name = getURLfilename(url)

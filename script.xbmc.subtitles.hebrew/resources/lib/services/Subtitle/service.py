@@ -19,7 +19,7 @@
 # 3.0.1 - Bug fix
 # 3.0.2 - Added free user & password.
 # 3.0.3 - Added email & password settings.
-# 3.0.4 - Get ajax urls instead of load the whole file (saves KB)
+# 3.0.4 - Get ajax urls instead of load the whole file (saves KB) + accurate search
 #
 # Created by: Ori Varon
 # Changed by: MeatHook (2.3)
@@ -271,15 +271,18 @@ def search_subtitles( file_original_path, title, tvshow, year, season, episode, 
  
     # Check if searching for tv show or movie and build the search string
     if tvshow:
-        searchString = re.split(r'\s\(\w+\)$',tvshow)[0].replace(" ","+")
+        searchString = re.split(r'\s\(\w+\)$',tvshow)[0]
     else:
-        searchString = title.replace(" ","+")
+        searchString = title
         
     log( __name__ ,"%s Search string = *%s*" % (debug_pretext, title))
     
     # Retrieve the search results (html)
-
-    searchResults = getURL(BASE_URL + "browse.php?q=" + searchString)
+    if tvshow:
+        query = {"q": searchString, "cs":"series"}
+    else:
+        query = {"q": searchString, "cs":"movies", "fy": int(year)-1, "uy": int(year)+1}
+    searchResults = getURL(BASE_URL + "browse.php?" + urllib.urlencode(query))
     # Search most likely timed out, no results
     if (not searchResults):
         return subtitlesList, "", "Search timed out, please try again later."
